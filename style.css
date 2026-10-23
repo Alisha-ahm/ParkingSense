@@ -1,0 +1,430 @@
+/**
+ * ParkSense: Smart Parking Management System
+ * Cyber-Mobility Control Center Theme
+ * High-precision terminal aesthetic with seamless Light & Dark mode support.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg-primary: #070a12;
+  --bg-surface: #0e1424;
+  --bg-elevated: #151e34;
+  --text-main: #f1f5f9;
+  --text-muted: #8492a6;
+  --border-color: #1e293b;
+  --accent-primary: #3b82f6;
+  --accent-cyan: #06b6d4;
+
+  /* Bays & Road Styling */
+  --road-surface: #090e1a;
+  --road-lane-line: rgba(245, 158, 11, 0.4);
+  --bay-border: rgba(148, 163, 184, 0.2);
+
+  /* Status Glowing Beacon Colors */
+  --beacon-free: #10b981;
+  --beacon-occupied: #f43f5e;
+  --beacon-reserved: #f59e0b;
+  --beacon-ev: #06b6d4;
+  --beacon-disabled: #64748b;
+}
+
+html:not(.dark) {
+  --bg-primary: #f4f6fa;
+  --bg-surface: #ffffff;
+  --bg-elevated: #e9eef5;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #cbd5e1;
+  --accent-primary: #2563eb;
+  --accent-cyan: #0284c7;
+
+  --road-surface: #e2e8f0;
+  --road-lane-line: rgba(217, 119, 6, 0.6);
+  --bay-border: rgba(100, 116, 139, 0.3);
+
+  --beacon-free: #059669;
+  --beacon-occupied: #e11d48;
+  --beacon-reserved: #d97706;
+  --beacon-ev: #0284c7;
+  --beacon-disabled: #475569;
+}
+
+/* Base resets & typography */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  min-height: 100vh;
+  transition: background-color 0.25s ease, color 0.25s ease;
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 60%),
+    linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+/* Tabular figures discipline for all financial and numerical telemetry */
+.tabular-nums,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Cyber Terminal Glass Card */
+.terminal-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+}
+
+/* Parking Bay Structural Styling (Realistic Terminal Bays) */
+.parking-bay {
+  position: relative;
+  border: 1.5px dashed var(--bay-border);
+  border-bottom: 2px solid var(--border-color);
+  background: rgba(14, 20, 36, 0.7);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.parking-bay:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent-primary);
+  box-shadow: 0 8px 16px -4px rgba(59, 130, 246, 0.2);
+}
+
+/* Wheel Stop Bumper at Top of Bay */
+.parking-bay::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 2px;
+}
+
+/* Status Overhead LED Beacon Indicator */
+.led-beacon {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.led-beacon.free {
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+}
+
+.led-beacon.occupied {
+  background: #f43f5e;
+  box-shadow: 0 0 8px #f43f5e;
+}
+
+.led-beacon.reserved {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.led-beacon.ev_charging {
+  background: #06b6d4;
+  box-shadow: 0 0 8px #06b6d4;
+}
+
+.led-beacon.out_of_service {
+  background: #64748b;
+  box-shadow: 0 0 4px #64748b;
+}
+
+/* Drive Lane Road Styling */
+.drive-road-lane {
+  position: relative;
+  background: var(--road-surface);
+  border: 1px solid var(--border-color);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* Center Road Striping */
+.road-marking-center {
+  position: absolute;
+  top: 50%;
+  left: 100px;
+  right: 100px;
+  height: 2px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--road-lane-line),
+    var(--road-lane-line) 20px,
+    transparent 20px,
+    transparent 36px
+  );
+  transform: translateY(-50%);
+}
+
+/* Pedestrian Zebra Crossings */
+.zebra-crossing {
+  width: 28px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.15),
+    rgba(255, 255, 255, 0.15) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* Slot Pulse Animation */
+@keyframes slotPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.6);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 22px 6px rgba(59, 130, 246, 0.9);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.slot-pulse {
+  animation: slotPulse 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Section Transitions */
+.section-fade-in {
+  animation: sectionSlide 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes sectionSlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Circular SVG Occupancy Progress Ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 0.8s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.4s ease;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+/* Toast Notifications */
+#toastNotificationCenter {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  min-width: 300px;
+  max-width: 440px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+/* =========================================================================
+   LIGHT THEME OVERRIDES (when class "dark" is absent from <html>)
+   ========================================================================= */
+
+html:not(.dark) body {
+  background-color: #f4f6fa !important;
+  color: #0f172a !important;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.06) 0%, transparent 60%),
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px) !important;
+}
+
+html:not(.dark) header {
+  background-color: rgba(255, 255, 255, 0.96) !important;
+  border-bottom-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+html:not(.dark) aside#appSidebar {
+  background-color: #ffffff !important;
+  border-right-color: #e2e8f0 !important;
+}
+
+html:not(.dark) [class*="bg-slate-900"],
+html:not(.dark) [class*="bg-slate-950"],
+html:not(.dark) [class*="bg-[#070a12]"] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) [class*="bg-slate-800"] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) [class*="text-white"],
+html:not(.dark) [class*="text-slate-100"] {
+  color: #0f172a !important;
+}
+
+html:not(.dark) [class*="text-slate-200"] {
+  color: #1e293b !important;
+}
+
+html:not(.dark) [class*="text-slate-300"] {
+  color: #334155 !important;
+}
+
+html:not(.dark) [class*="text-slate-400"] {
+  color: #64748b !important;
+}
+
+html:not(.dark) [class*="text-slate-500"] {
+  color: #64748b !important;
+}
+
+html:not(.dark) [class*="border-slate-800"],
+html:not(.dark) [class*="border-slate-700"] {
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) input,
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html:not(.dark) input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html:not(.dark) .parking-bay {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+html:not(.dark) .drive-road-lane {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+html:not(.dark) .zebra-crossing {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.7) 6px,
+    transparent 6px,
+    transparent 12px
+  ) !important;
+}
+
+html:not(.dark) #ticketModal > div,
+html:not(.dark) #receiptModal > div,
+html:not(.dark) #slotDetailContent {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+html:not(.dark) #notifDropdownTray {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15) !important;
+}
+
+html:not(.dark) #slotHoverTooltip {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not(.dark) table th {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+html:not(.dark) table td {
+  border-color: #f1f5f9 !important;
+  color: #1e293b !important;
+}
+
+html:not(.dark) table tr:hover {
+  background-color: #f8fafc !important;
+}
+
+html:not(.dark) .nav-link-item:hover:not(.bg-blue-600) {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #ticketModal,
+  #receiptModal,
+  #ticketModal *,
+  #receiptModal * {
+    visibility: visible;
+  }
+  #ticketModal,
+  #receiptModal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.45);
+}

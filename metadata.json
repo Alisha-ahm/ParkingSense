@@ -1,0 +1,6 @@
+{
+  "name": "ParkSense: Smart Parking Management System",
+  "description": "Automated smart parking management system with live slot allocation, dynamic pricing, billing, and peak-hour forecasting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
