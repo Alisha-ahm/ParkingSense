@@ -23,33 +23,12 @@ export const UI = {
   },
 
   init() {
-    this.applyTheme(Storage.getTheme());
+    document.documentElement.classList.remove('dark');
+    try { localStorage.removeItem('parksense_theme'); } catch (_) {}
     this.updateUserRoleBadge(Storage.getRole());
     this.renderSurgeBadge();
     this.renderNotificationsBadge();
     this.setupGlobalListeners();
-  },
-
-  /**
-   * Applies dark or light theme to <html>.
-   */
-  applyTheme(theme) {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    Storage.setTheme(theme);
-    const themeBtn = document.getElementById('themeToggleBtn');
-    if (themeBtn) {
-      themeBtn.innerHTML = theme === 'dark' 
-        ? `<svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>`
-        : `<svg class="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>`;
-      themeBtn.setAttribute('title', theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode');
-    }
-    this.renderParkingMap();
-    this.renderDashboardKPIs();
-    ChartRenderer.refreshAll();
   },
 
   /**
@@ -81,15 +60,6 @@ export const UI = {
    * Sets up top bar, global dropdowns, modal dismissals, and window resize listeners.
    */
   setupGlobalListeners() {
-    // Theme toggle
-    const themeBtn = document.getElementById('themeToggleBtn');
-    if (themeBtn) {
-      themeBtn.addEventListener('click', () => {
-        const nextTheme = Storage.getTheme() === 'dark' ? 'light' : 'dark';
-        this.applyTheme(nextTheme);
-      });
-    }
-
     // Role switcher dropdown
     const roleSelect = document.getElementById('roleSelect');
     if (roleSelect) {
@@ -242,21 +212,23 @@ export const UI = {
 
     // Circular progress gauge for occupancy
     const circle = document.getElementById('occupancyCircleRing');
+    const circleText = document.getElementById('occupancyCircleText');
     if (circle) {
-      const radius = 42;
+      const radius = 40;
       const circumference = 2 * Math.PI * radius;
       const offset = circumference - (occupancyRate / 100) * circumference;
       circle.style.strokeDasharray = `${circumference}`;
       circle.style.strokeDashoffset = `${offset}`;
 
-      // Change ring color based on capacity
+      // Royal blue accent matching reference image
       if (occupancyRate >= 80) {
-        circle.style.stroke = '#ef4444'; // Red
-      } else if (occupancyRate >= 60) {
-        circle.style.stroke = '#f59e0b'; // Amber
+        circle.style.stroke = '#ef4444'; // Red alert on critical
       } else {
-        circle.style.stroke = '#10b981'; // Green
+        circle.style.stroke = '#0075ff'; // Vibrant royal blue
       }
+    }
+    if (circleText) {
+      circleText.textContent = `${occupancyRate}%`;
     }
 
     this.renderSurgeBadge();
@@ -272,13 +244,13 @@ export const UI = {
 
     const tickets = Storage.getTickets();
     if (tickets.length === 0) {
-      container.innerHTML = `<span class="text-xs text-slate-500 italic">No vehicles currently parked inside</span>`;
+      container.innerHTML = `<span class="text-xs text-slate-400 italic">No vehicles currently parked inside</span>`;
       return;
     }
 
     container.innerHTML = tickets.slice(0, 8).map((t) => {
       return `
-        <button type="button" class="quick-exit-chip px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-blue-300 border border-slate-700/80 rounded text-[11px] font-mono transition-colors" data-ticket-id="${t.ticketId}">
+        <button type="button" class="quick-exit-chip px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-[#0075FF] border border-slate-200 rounded-lg text-xs font-mono font-semibold transition-colors cursor-pointer" data-ticket-id="${t.ticketId}">
           ${t.plate} (${t.slotId})
         </button>
       `;
@@ -385,10 +357,10 @@ export const UI = {
       }
 
       let typeBadge = '';
-      if (slot.isEv) typeBadge = `<span class="text-[9px] font-mono text-cyan-400 bg-cyan-950/70 px-1 rounded border border-cyan-800/60">⚡EV</span>`;
-      else if (slot.isAccessible) typeBadge = `<span class="text-[9px] font-mono text-blue-400 bg-blue-950/70 px-1 rounded border border-blue-800/60">♿ADA</span>`;
-      else if (slot.type === 'bike') typeBadge = `<span class="text-[9px] font-mono text-emerald-400 bg-emerald-950/70 px-1 rounded border border-emerald-800/60">BIKE</span>`;
-      else if (slot.type === 'suv') typeBadge = `<span class="text-[9px] font-mono text-purple-400 bg-purple-950/70 px-1 rounded border border-purple-800/60">SUV</span>`;
+      if (slot.isEv) typeBadge = `<span class="text-[9px] font-mono font-bold text-cyan-700 bg-cyan-100/70 px-1.5 py-0.5 rounded border border-cyan-300">EV</span>`;
+      else if (slot.isAccessible) typeBadge = `<span class="text-[9px] font-mono font-bold text-blue-700 bg-blue-100/70 px-1.5 py-0.5 rounded border border-blue-300">ADA</span>`;
+      else if (slot.type === 'bike') typeBadge = `<span class="text-[9px] font-mono font-bold text-emerald-700 bg-emerald-100/70 px-1.5 py-0.5 rounded border border-emerald-300">BIKE</span>`;
+      else if (slot.type === 'suv') typeBadge = `<span class="text-[9px] font-mono font-bold text-purple-700 bg-purple-100/70 px-1.5 py-0.5 rounded border border-purple-300">SUV</span>`;
 
       return `
         <div 
@@ -607,73 +579,73 @@ export const UI = {
     }
 
     content.innerHTML = `
-      <div class="flex items-center justify-between border-b border-slate-700/60 pb-3 mb-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
         <div>
-          <h3 class="text-lg font-bold text-white">Slot ${slot.id} (Level ${slot.floor})</h3>
-          <span class="text-xs text-slate-400 font-mono">Distance to Entry: ${slot.distance} meters</span>
+          <h3 class="text-lg font-extrabold text-slate-900">Slot ${slot.id} (Level ${slot.floor})</h3>
+          <span class="text-xs text-slate-700 font-bold font-mono">Distance to Entry: ${slot.distance} meters</span>
         </div>
-        <span class="px-2.5 py-1 text-xs font-mono uppercase font-bold rounded-md ${
-          slot.status === 'free' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
-          slot.status === 'occupied' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-          slot.status === 'reserved' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-          slot.status === 'ev_charging' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-          'bg-slate-700 text-slate-300'
+        <span class="px-2.5 py-1 text-xs font-mono uppercase font-extrabold rounded-md ${
+          slot.status === 'free' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
+          slot.status === 'occupied' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+          slot.status === 'reserved' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+          slot.status === 'ev_charging' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+          'bg-slate-200 text-slate-800 border border-slate-300'
         }">
           ${slot.status.replace('_', ' ')}
         </span>
       </div>
 
       <div class="grid grid-cols-2 gap-3 text-xs mb-5">
-        <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/40">
-          <span class="text-slate-400 block mb-1">Slot Specifications</span>
-          <div class="text-slate-200 font-medium">Type: <span class="capitalize">${slot.type}</span></div>
-          <div class="text-slate-200 font-medium">EV Charger: <span>${slot.isEv ? 'Yes (Level 2 Fast)' : 'No'}</span></div>
-          <div class="text-slate-200 font-medium">Accessible: <span>${slot.isAccessible ? 'Yes (ADA Compliant)' : 'Standard'}</span></div>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <span class="text-slate-800 block mb-1 font-bold">Slot Specifications</span>
+          <div class="text-slate-900 font-semibold">Type: <span class="capitalize">${slot.type}</span></div>
+          <div class="text-slate-900 font-semibold">EV Charger: <span>${slot.isEv ? 'Yes (Level 2 Fast)' : 'No'}</span></div>
+          <div class="text-slate-900 font-semibold">Accessible: <span>${slot.isAccessible ? 'Yes (ADA Compliant)' : 'Standard'}</span></div>
         </div>
 
-        <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/40">
-          <span class="text-slate-400 block mb-1">Current Vehicle</span>
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <span class="text-slate-800 block mb-1 font-bold">Current Vehicle</span>
           ${
             slot.currentVehicle
               ? `
-                <div class="text-white font-mono font-bold text-sm">${slot.currentVehicle.plate}</div>
-                <div class="text-slate-300">Parked: <span class="font-mono">${parkedDuration}</span></div>
-                <div class="text-slate-300 font-mono text-[11px] truncate">Ticket: ${slot.currentVehicle.ticketId}</div>
+                <div class="text-slate-900 font-mono font-extrabold text-sm">${slot.currentVehicle.plate}</div>
+                <div class="text-slate-700 font-medium">Parked: <span class="font-mono font-bold text-slate-900">${parkedDuration}</span></div>
+                <div class="text-slate-700 font-mono text-[11px] truncate font-semibold">Ticket: ${slot.currentVehicle.ticketId}</div>
               `
-              : `<div class="text-slate-400 italic">No vehicle currently parked</div>`
+              : `<div class="text-slate-500 italic font-medium">No vehicle currently parked</div>`
           }
         </div>
       </div>
 
-      <div class="flex items-center justify-end gap-2 border-t border-slate-700/60 pt-3">
+      <div class="flex items-center justify-end gap-2 border-t border-slate-200 pt-3">
         ${
           slot.status === 'free'
             ? `
-              <button id="modalQuickParkBtn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-medium">
+              <button id="modalQuickParkBtn" class="px-3.5 py-1.5 bg-[#0075FF] hover:bg-[#005fdb] text-white rounded-lg text-xs font-bold transition-colors cursor-pointer">
                 Park Vehicle Here
               </button>
-              <button id="modalMarkMaintenanceBtn" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded text-xs font-medium">
+              <button id="modalMarkMaintenanceBtn" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition-colors cursor-pointer">
                 Set Out of Service
               </button>
             `
             : slot.status === 'out_of_service'
             ? `
-              <button id="modalRestoreServiceBtn" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-medium">
+              <button id="modalRestoreServiceBtn" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer">
                 Restore to Service
               </button>
             `
             : `
-              <button id="modalCheckoutVehicleBtn" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-medium">
+              <button id="modalCheckoutVehicleBtn" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer">
                 Process Checkout & Exit
               </button>
               ${slot.currentVehicle ? `
-                <button id="modalViewTicketBtn" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded text-xs font-medium">
+                <button id="modalViewTicketBtn" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-lg text-xs font-bold transition-colors cursor-pointer">
                   View Ticket / QR
                 </button>
               ` : ''}
             `
         }
-        <button id="modalCloseSlotBtn" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-medium">
+        <button id="modalCloseSlotBtn" class="px-3.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-lg text-xs font-bold transition-colors cursor-pointer">
           Close
         </button>
       </div>
@@ -876,9 +848,9 @@ export const UI = {
 
     if (reservations.length === 0) {
       container.innerHTML = `
-        <div class="p-8 text-center text-slate-400 bg-slate-800/20 rounded-xl border border-slate-800">
-          <p class="text-sm">No active reservations currently scheduled.</p>
-          <span class="text-xs text-slate-500">Drivers can book parking slots ahead of arrival.</span>
+        <div class="p-8 text-center text-slate-800 bg-slate-50 rounded-xl border border-slate-200 font-medium">
+          <p class="text-sm font-bold text-slate-900">No active reservations currently scheduled.</p>
+          <span class="text-xs text-slate-700 font-semibold">Drivers can book parking slots ahead of arrival.</span>
         </div>
       `;
       return;
@@ -894,35 +866,35 @@ export const UI = {
         let statusBadge = '';
         if (res.status === 'confirmed') {
           if (!isPastStart) {
-            statusBadge = `<span class="text-xs font-mono text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded border border-blue-500/20">CONFIRMED</span>`;
+            statusBadge = `<span class="text-xs font-mono font-bold text-[#0075FF] bg-blue-50 px-2.5 py-1 rounded border border-blue-200">CONFIRMED</span>`;
           } else if (diffMs > 0) {
-            statusBadge = `<span class="text-xs font-mono text-amber-400 bg-amber-500/10 px-2.5 py-1 rounded border border-amber-500/20 animate-pulse">ARRIVING (${minutesLeft}m ${secondsLeft}s grace left)</span>`;
+            statusBadge = `<span class="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-2.5 py-1 rounded border border-amber-300 animate-pulse">ARRIVING (${minutesLeft}m ${secondsLeft}s grace left)</span>`;
           } else {
-            statusBadge = `<span class="text-xs font-mono text-rose-400 bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/20">AUTO-RELEASED (NO SHOW)</span>`;
+            statusBadge = `<span class="text-xs font-mono font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded border border-rose-300">AUTO-RELEASED (NO SHOW)</span>`;
           }
         } else if (res.status === 'checked_in') {
-          statusBadge = `<span class="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/20">CHECKED IN</span>`;
+          statusBadge = `<span class="text-xs font-mono font-bold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-300">CHECKED IN</span>`;
         } else {
-          statusBadge = `<span class="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded">CANCELLED</span>`;
+          statusBadge = `<span class="text-xs font-mono font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded border border-slate-200">CANCELLED</span>`;
         }
 
         const startStr = new Date(res.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const endStr = new Date(res.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         return `
-          <div class="p-4 rounded-xl bg-slate-800/40 border border-slate-700/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center font-mono text-sm border border-blue-500/30">
+              <div class="w-10 h-10 rounded-lg bg-blue-50 text-[#0075FF] font-extrabold flex items-center justify-center font-mono text-sm border border-blue-200">
                 ${res.slotId}
               </div>
               <div>
                 <div class="flex items-center gap-2">
-                  <h4 class="font-bold text-white text-sm">${res.driverName || 'Guest Driver'}</h4>
-                  <span class="font-mono text-xs px-2 py-0.5 rounded bg-slate-700 text-slate-200">${res.plate}</span>
-                  <span class="text-xs uppercase text-slate-400">(${res.type})</span>
+                  <h4 class="font-extrabold text-slate-900 text-sm">${res.driverName || 'Guest Driver'}</h4>
+                  <span class="font-mono text-xs px-2 py-0.5 rounded bg-slate-200 text-slate-900 font-bold">${res.plate}</span>
+                  <span class="text-xs uppercase text-slate-700 font-bold">(${res.type})</span>
                 </div>
-                <div class="text-xs text-slate-400 mt-0.5">
-                  Window: <span class="text-slate-300 font-mono">${startStr} – ${endStr}</span>
+                <div class="text-xs text-slate-700 mt-0.5 font-semibold">
+                  Window: <span class="text-slate-900 font-mono font-bold">${startStr} – ${endStr}</span>
                 </div>
               </div>
             </div>
@@ -932,10 +904,10 @@ export const UI = {
               ${
                 res.status === 'confirmed'
                   ? `
-                    <button class="res-checkin-btn px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-medium" data-res-id="${res.id}">
+                    <button class="res-checkin-btn px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer" data-res-id="${res.id}">
                       Check In
                     </button>
-                    <button class="res-cancel-btn px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-rose-300 rounded text-xs font-medium" data-res-id="${res.id}">
+                    <button class="res-cancel-btn px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-rose-700 rounded-lg text-xs font-bold border border-slate-300 transition-colors cursor-pointer" data-res-id="${res.id}">
                       Cancel
                     </button>
                   `
@@ -1082,23 +1054,23 @@ export const UI = {
         const durationFormatted = `${Math.floor(r.durationHours)}h ${Math.round((r.durationHours % 1) * 60)}m`;
         const feeFormatted = r.fee !== null ? `$${r.fee.toFixed(2)}` : 'In Progress';
 
-        let badgeClass = 'bg-blue-500/10 text-blue-400 border border-blue-500/20';
+        let badgeClass = 'bg-blue-100 text-blue-800 border border-blue-300';
         if (r.status === 'Completed') {
-          badgeClass = 'bg-slate-700/40 text-slate-300 border border-slate-700';
+          badgeClass = 'bg-slate-100 text-slate-800 border border-slate-300';
         } else if (r.status === 'Overstay') {
-          badgeClass = 'bg-rose-500/15 text-rose-400 border border-rose-500/30';
+          badgeClass = 'bg-rose-100 text-rose-800 border border-rose-300';
         }
 
         return `
-          <tr class="hover:bg-slate-800/40 transition-colors border-b border-slate-800 text-xs">
-            <td class="py-2.5 px-3 font-mono font-bold text-white">${r.plate}</td>
-            <td class="py-2.5 px-3 uppercase text-slate-300 font-mono">${r.type}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-300">${r.slotId} (L${r.floor})</td>
-            <td class="py-2.5 px-3 text-slate-400">${entryStr}</td>
-            <td class="py-2.5 px-3 font-mono text-slate-300">${durationFormatted}</td>
-            <td class="py-2.5 px-3 font-mono font-medium text-emerald-400">${feeFormatted}</td>
+          <tr class="hover:bg-slate-50 transition-colors border-b border-slate-200 text-xs">
+            <td class="py-2.5 px-3 font-mono font-extrabold text-slate-900">${r.plate}</td>
+            <td class="py-2.5 px-3 uppercase text-slate-900 font-mono font-bold">${r.type}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${r.slotId} (L${r.floor})</td>
+            <td class="py-2.5 px-3 text-slate-700 font-semibold">${entryStr}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${durationFormatted}</td>
+            <td class="py-2.5 px-3 font-mono font-bold text-emerald-700">${feeFormatted}</td>
             <td class="py-2.5 px-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold ${badgeClass}">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${badgeClass}">
                 ${r.status.toUpperCase()}
               </span>
             </td>
@@ -1179,20 +1151,20 @@ export const UI = {
     listEl.innerHTML = notifs
       .slice(0, 15)
       .map((n) => {
-        let iconColor = 'text-blue-400';
-        if (n.type === 'warning') iconColor = 'text-amber-400';
-        if (n.type === 'alert') iconColor = 'text-rose-400';
-        if (n.type === 'success') iconColor = 'text-emerald-400';
+        let titleColor = 'text-[#0075FF]';
+        if (n.type === 'warning') titleColor = 'text-amber-700';
+        if (n.type === 'alert') titleColor = 'text-rose-700';
+        if (n.type === 'success') titleColor = 'text-emerald-700';
 
         const timeStr = new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         return `
-          <div class="p-3 border-b border-slate-700/50 hover:bg-slate-700/20 transition-colors">
+          <div class="p-3 border-b border-slate-100 hover:bg-slate-50 transition-colors">
             <div class="flex items-center justify-between text-xs mb-1">
-              <span class="font-bold ${iconColor}">${n.title}</span>
-              <span class="text-[10px] text-slate-400 font-mono">${timeStr}</span>
+              <span class="font-extrabold ${titleColor}">${n.title}</span>
+              <span class="text-[10px] text-slate-700 font-mono font-bold">${timeStr}</span>
             </div>
-            <p class="text-xs text-slate-300">${n.message}</p>
+            <p class="text-xs text-slate-800 font-medium">${n.message}</p>
           </div>
         `;
       })
@@ -1228,8 +1200,19 @@ export const UI = {
       'bg-slate-800 border border-slate-700'
     }`;
 
+    let iconSvg = '';
+    if (type === 'success') {
+      iconSvg = `<svg class="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>`;
+    } else if (type === 'error') {
+      iconSvg = `<svg class="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>`;
+    } else if (type === 'warning') {
+      iconSvg = `<svg class="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+    } else {
+      iconSvg = `<svg class="w-4 h-4 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+    }
+
     toast.innerHTML = `
-      <span>${type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ'}</span>
+      ${iconSvg}
       <span class="flex-1">${message}</span>
     `;
 
@@ -1304,34 +1287,34 @@ export const UI = {
     const forecast = PredictionEngine.predictOccupancy(day, hour);
 
     resultBox.innerHTML = `
-      <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs uppercase font-mono text-slate-400">Forecast for ${forecast.timeFormatted}:</span>
-            <span class="px-2 py-0.5 rounded text-xs font-mono font-bold ${
-              forecast.urgencyColor === 'rose' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
-              forecast.urgencyColor === 'amber' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
-              'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            <span class="text-xs uppercase font-mono font-bold text-slate-800">Forecast for ${forecast.timeFormatted}:</span>
+            <span class="px-2 py-0.5 rounded text-xs font-mono font-extrabold ${
+              forecast.urgencyColor === 'rose' ? 'bg-rose-100 text-rose-800 border border-rose-300' :
+              forecast.urgencyColor === 'amber' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
+              'bg-emerald-100 text-emerald-800 border border-emerald-300'
             }">
               ${forecast.statusBadge}
             </span>
           </div>
-          <div class="text-2xl font-bold font-mono text-white">
+          <div class="text-2xl font-extrabold font-mono text-slate-900">
             ${forecast.predictedRate}% Expected Occupancy
-            <span class="text-sm font-normal text-slate-400">(${forecast.predictedSlotsOccupied} / ${forecast.totalSlots} slots)</span>
+            <span class="text-sm font-bold text-slate-700">(${forecast.predictedSlotsOccupied} / ${forecast.totalSlots} slots)</span>
           </div>
-          <div class="text-xs text-slate-400 mt-1">
-            Optimal Arrival Window: <span class="text-emerald-400 font-mono font-medium">${forecast.recommendedWindow}</span>
+          <div class="text-xs text-slate-700 mt-1 font-semibold">
+            Optimal Arrival Window: <span class="text-emerald-700 font-mono font-bold">${forecast.recommendedWindow}</span>
           </div>
         </div>
 
         <div class="flex flex-col items-end text-right">
-          <span class="text-[11px] text-slate-400">Algorithm Confidence</span>
+          <span class="text-[11px] text-slate-800 font-bold">Algorithm Confidence</span>
           <div class="flex items-center gap-1.5 mt-0.5">
-            <span class="text-lg font-bold font-mono text-blue-400">${forecast.confidence}%</span>
-            <span class="text-xs text-slate-500 font-mono">(WMA model)</span>
+            <span class="text-lg font-extrabold font-mono text-[#0075FF]">${forecast.confidence}%</span>
+            <span class="text-xs text-slate-700 font-mono font-semibold">(WMA model)</span>
           </div>
-          <span class="text-[10px] text-slate-500">Based on past 7-day diurnal patterns</span>
+          <span class="text-[10px] text-slate-600 font-medium">Based on past 7-day diurnal patterns</span>
         </div>
       </div>
     `;

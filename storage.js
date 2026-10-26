@@ -13,7 +13,6 @@ const STORAGE_KEYS = {
   SETTINGS: 'parksense_settings',
   ANALYTICS_HISTORY: 'parksense_analytics_history',
   CURRENT_ROLE: 'parksense_current_role',
-  THEME: 'parksense_theme',
 };
 
 // Default system pricing and rules settings
@@ -319,7 +318,6 @@ function generateSeedData() {
     analyticsHistory,
     settings: DEFAULT_SETTINGS,
     role: 'admin',
-    theme: 'dark',
   };
 }
 
@@ -396,7 +394,7 @@ export const Storage = {
     localStorage.setItem(STORAGE_KEYS.ANALYTICS_HISTORY, JSON.stringify(seed.analyticsHistory));
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(seed.settings));
     localStorage.setItem(STORAGE_KEYS.CURRENT_ROLE, seed.role);
-    localStorage.setItem(STORAGE_KEYS.THEME, seed.theme);
+    try { localStorage.removeItem('parksense_theme'); } catch (_) {}
     return seed;
   },
 
@@ -570,7 +568,7 @@ export const Storage = {
     localStorage.setItem(STORAGE_KEYS.ANALYTICS_HISTORY, JSON.stringify(records));
   },
 
-  // Role and Theme
+  // Role
   getRole() {
     return localStorage.getItem(STORAGE_KEYS.CURRENT_ROLE) || 'admin';
   },
@@ -580,10 +578,6 @@ export const Storage = {
   },
 
   getTheme() {
-    return localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
-  },
-
-  setTheme(theme) {
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
+    return 'light';
   },
 };

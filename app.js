@@ -78,6 +78,55 @@ class ParkSenseApp {
       });
     });
 
+    // Explicit binding for dashboard primary quick action buttons
+    const checkInBtn = document.getElementById('dashCheckInBtn');
+    if (checkInBtn) {
+      checkInBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        UI.switchSection('entrySection');
+      });
+    }
+
+    const viewGridBtn = document.getElementById('dashViewGridBtn');
+    if (viewGridBtn) {
+      viewGridBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        UI.switchSection('mapSection');
+      });
+    }
+
+    // Live Telemetry / Baseline Profile pill toggles on Diurnal Chart
+    const pill1 = document.getElementById('pillData1Btn');
+    const pill2 = document.getElementById('pillData2Btn');
+    if (pill1 && pill2) {
+      pill1.addEventListener('click', () => {
+        pill1.className = 'btn-pill-active text-xs cursor-pointer';
+        pill2.className = 'btn-pill-inactive text-xs cursor-pointer';
+        ChartRenderer.renderHourlyLineChart('hourlyChart', new Date().getDay(), 'live');
+        UI.showToast('Switched to Live Ultrasonic Sensor Telemetry', 'info');
+      });
+      pill2.addEventListener('click', () => {
+        pill2.className = 'btn-pill-active text-xs cursor-pointer';
+        pill1.className = 'btn-pill-inactive text-xs cursor-pointer';
+        ChartRenderer.renderHourlyLineChart('hourlyChart', (new Date().getDay() + 6) % 7, 'baseline');
+        UI.showToast('Switched to 7-Day Diurnal Baseline Profile', 'info');
+      });
+    }
+
+    // Location switcher button on top bar
+    const locBtn = document.getElementById('locationSelectBtn');
+    if (locBtn) {
+      const locations = ['Terminal Deck #1', 'Terminal Deck #2', 'Terminal Deck #3'];
+      let locIdx = 0;
+      locBtn.addEventListener('click', () => {
+        locIdx = (locIdx + 1) % locations.length;
+        const span = locBtn.querySelector('span');
+        if (span) span.textContent = `Location: ${locations[locIdx]}`;
+        UI.renderParkingMap(locIdx + 1);
+        UI.showToast(`Switched active view to ${locations[locIdx]}`, 'info');
+      });
+    }
+
     // Floor switch tabs on Parking Map
     document.querySelectorAll('.floor-tab-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -462,7 +511,7 @@ class ParkSenseApp {
     const slots = Storage.getSlots();
     select.innerHTML = slots
       .map(
-        (s) => `<option value="${s.id}">Slot ${s.id} (L${s.floor} - ${s.type.toUpperCase()}${s.isEv ? ' ⚡EV' : ''})</option>`
+        (s) => `<option value="${s.id}">Slot ${s.id} (L${s.floor} - ${s.type.toUpperCase()}${s.isEv ? ' [EV]' : ''})</option>`
       )
       .join('');
   }
@@ -581,7 +630,7 @@ class ParkSenseApp {
    * System timers: Live clock, 15-minute reservation auto-release countdowns, and KPI updates.
    */
   startSystemTimers() {
-    // 1. Top bar live clock
+    // 1. Top bar live clock and date
     const clockEl = document.getElementById('systemLiveClock');
     const updateClock = () => {
       if (clockEl) {
@@ -591,6 +640,15 @@ class ParkSenseApp {
     };
     updateClock();
     this.clockInterval = setInterval(updateClock, 1000);
+
+    const dateEl = document.getElementById('systemDateDisplay');
+    if (dateEl) {
+      const now = new Date();
+      const dd = String(now.getDate()).padStart(2, '0');
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const yyyy = now.getFullYear();
+      dateEl.textContent = `${dd}/${mm}/${yyyy}`;
+    }
 
     // 2. Reservation no-show auto-release checker (every 10 seconds)
     this.countdownInterval = setInterval(() => {
